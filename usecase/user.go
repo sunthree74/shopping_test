@@ -3,6 +3,8 @@ package usecase
 import (
 	"context"
 	"errors"
+	jwt "github.com/appleboy/gin-jwt/v2"
+	"github.com/gin-gonic/gin"
 	"github.com/sunthree74/shopping_test/interfaces"
 	"github.com/sunthree74/shopping_test/model"
 	"strconv"
@@ -12,6 +14,17 @@ var _ interfaces.UserUsecase = (*userUsecase)(nil)
 
 type userUsecase struct {
 	userRepo interfaces.UserRepository
+}
+
+func (u *userUsecase) FindByJWT(ginCtx *gin.Context) (model.User, error) {
+	claims := jwt.ExtractClaims(ginCtx)
+	email := claims["Email"].(string)
+	user, err := u.userRepo.FindByEmail(ginCtx, email)
+	if err != nil {
+		return model.User{}, err
+	}
+
+	return user, err
 }
 
 func (u *userUsecase) Login(ctx context.Context, email string, password string) (model.User, error) {
@@ -33,7 +46,7 @@ func (u *userUsecase) Create(ctx context.Context, user *model.User) error {
 		return resErr
 	}
 	if result.ID != 0 {
-		return errors.New("Email suah terdaftar")
+		return errors.New("Email sudah terdaftar")
 	}
 	err := u.userRepo.Create(ctx, user)
 	if err != nil {

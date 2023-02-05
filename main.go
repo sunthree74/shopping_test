@@ -35,9 +35,12 @@ func main() {
 	router.Use(gin.Recovery())
 
 	userRepo := repository.InitializeUser(db, http.DefaultClient)
+	productCategoryRepo := repository.InitializeProductCategory(db, http.DefaultClient)
 
 	userUsecase := usecase.InitializeUser(userRepo)
+	productCategoryUsecase := usecase.InitializeProductCategory(productCategoryRepo)
 
+	productCategoryHandler := handler.HandleProductCategory(productCategoryUsecase, userUsecase)
 	//authHandler := handler.HandleAuth(userUsecase)
 	middleware, err := handler.InitializeMiddleware(userUsecase)
 	if err != nil {
@@ -51,6 +54,16 @@ func main() {
 	})
 
 	router.POST("/auth/:method", userAuth.LoginHandler)
+
+	productCategoryRoute := router.Group("/category")
+	{
+		productCategoryRoute.Use(userAuth.MiddlewareFunc())
+		{
+			productCategoryRoute.GET("/list", productCategoryHandler.GetList())
+			productCategoryRoute.POST("/create", productCategoryHandler.Create())
+			productCategoryRoute.GET("/find/:id", productCategoryHandler.GetById())
+		}
+	}
 
 	log.Fatalln(router.Run(":8008"))
 }

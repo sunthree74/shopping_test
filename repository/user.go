@@ -51,7 +51,7 @@ func (u *userRepository) Delete(ctx context.Context, uid string) error {
 
 func (u userRepository) FindById(ctx context.Context, uid string) (model.User, error) {
 	var data model.User
-	if err := u.db.WithContext(ctx).Where("id = ?", uid).First(&data).Error; err != nil {
+	if err := u.db.WithContext(ctx).Where("id = ?", uid).Find(&data).Error; err != nil {
 		return model.User{}, fmt.Errorf("user get by id query execution error: %w", err)
 	}
 
